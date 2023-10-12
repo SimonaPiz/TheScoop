@@ -19,6 +19,48 @@ let database = {
   nextCommentId: 1
 };
 
+// Funzioni per routes
+/*----- /comments
+  -POST
+    - Receives comment information from comment property of request body
+    - Creates new comment and adds it to database, returns a 201 response with comment on 
+      comment property of response body
+    - If body isn’t supplied, user with supplied username doesn’t exist, or article with 
+      supplied article ID doesn’t exist, returns a 400 response
+*/
+const createComment = (url, request) => {
+  const requestComment = request.body && request.body.comment;
+  const response = {};
+
+  if (
+    requestComment && requestComment.body && 
+    requestComment.articleId && database.articles[requestComment.articleId] && 
+    requestComment.username && database.users[requestComment.username]
+  ) {
+    const comment = {
+      id: database.nextCommentId++,
+      body: requestComment.body,
+      username: requestComment.username,
+      articleId: requestComment.articleId,
+      upvotedBy: [],
+      downvotedBy: []
+    };
+
+    database.comments[comment.id] = comment;
+    database.articles[comment.articleId].commentIds.push(comment.id);
+    database.users[comment.username].commentIds.push(comment.id);
+
+    response.body = {comment: comment};
+    response.status = 201;
+  } else {
+    response.status = 400;
+  }
+
+  return response;
+};
+
+
+// Route Paths and Functionality
 const routes = {
   '/users': {
     'POST': getOrCreateUser
@@ -40,7 +82,12 @@ const routes = {
   },
   '/articles/:id/downvote': {
     'PUT': downvoteArticle
-  }
+  },
+
+  //-----   /comments
+  '/comments': {
+    'POST': createComment
+  },
 };
 
 function getUser(url, request) {
