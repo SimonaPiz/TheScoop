@@ -1,8 +1,22 @@
+/*
+------------Database Properties
+- comments - an object with keys of IDs and values of the corresponding comments
+  - id - Number, unique to each comment
+  - body - String
+  - username - String, the username of the author
+  - articleId - Number, the ID of the article the comment belongs to
+  - upvotedBy - Array of usernames, corresponding to users who upvoted the comment
+  - downvotedBy - Array of usernames, corresponding to users who downvoted the comment
+- nextCommentId - a number representing the ID of the next comment to create (to ensure all comments 
+  have unique IDs), initializes to 1
+*/
 // database is let instead of const to allow us to modify it in test.js
 let database = {
   users: {},
   articles: {},
-  nextArticleId: 1
+  nextArticleId: 1,
+  comments: {},
+  nextCommentId: 1
 };
 
 const routes = {
