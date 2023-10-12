@@ -59,6 +59,35 @@ const createComment = (url, request) => {
   return response;
 };
 
+/*-------   /comments/:id
+  - PUT
+    - Receives comment ID from URL parameter and updated comment from comment property 
+      of request body
+    - Updates body of corresponding comment in database, returns a 200 response with 
+      the updated comment on comment property of the response body
+    - If comment with given ID does not exist, returns 404 response
+    - If no ID or updated comment is supplied, returns 400 response
+*/
+const updateComment = (url, request) => {
+  const id = Number(url.split('/').filter(segment => segment)[1]);
+  const savedComment = database.comments[id];
+  const requestComment = request.body && request.body.comment;
+  const response = {};
+
+  if (!id || !requestComment) {
+    response.status = 400;
+  } else if (!savedComment) {
+    response.status = 404;
+  } else {
+    savedComment.body = requestComment.body || savedComment.body;
+    
+    response.body = {comment: savedComment};
+    response.status = 200;
+  }
+
+  return response;
+};
+
 
 // Route Paths and Functionality
 const routes = {
@@ -87,6 +116,11 @@ const routes = {
   //-----   /comments
   '/comments': {
     'POST': createComment
+  },
+
+  //-----   /comments/:id
+  '/comments/:id': {
+    'PUT': updateComment
   },
 };
 
