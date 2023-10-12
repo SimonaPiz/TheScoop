@@ -95,28 +95,55 @@ const updateComment = (url, request) => {
       corresponding user and article models, returns 204 response
     - If no ID is supplied or comment with supplied ID doesn’t exist, returns 404 response
   */
-    const deleteComment = (url, request) => {
-      const id = Number(url.split('/').filter(segment => segment)[1]);
-      const savedComment = database.comments[id];
-      const response = {};
+const deleteComment = (url, request) => {
+  const id = Number(url.split('/').filter(segment => segment)[1]);
+  const savedComment = database.comments[id];
+  const response = {};
+
+  if (savedComment) {
+    database.comments[id] = null;
+
+    const userIndex = database.users[savedComment.username].commentIds.indexOf(id);
+    database.users[savedComment.username].commentIds.splice(userIndex,1);
+
+    const articleIndex = database.articles[savedComment.articleId].commentIds.indexOf(id);
+    database.articles[savedComment.articleId].commentIds.splice(articleIndex,1);
     
-      if (savedComment) {
-        database.comments[id] = null;
-    
-        const userIndex = database.users[savedComment.username].commentIds.indexOf(id);
-        database.users[savedComment.username].commentIds.splice(userIndex,1);
-    
-        const articleIndex = database.articles[savedComment.articleId].commentIds.indexOf(id);
-        database.articles[savedComment.articleId].commentIds.splice(articleIndex,1);
-        
-        response.status = 204;
-      } else {
-        response.status = 404;
-      }
-    
-      return response;
-    };
-    
+    response.status = 204;
+  } else {
+    response.status = 404;
+  }
+
+  return response;
+};
+
+/* -------        /comments/:id/upvote
+  - PUT
+    - Receives comment ID from URL parameter and username from username property of request body
+    - Adds supplied username to upvotedBy of corresponding comment if user hasn’t already 
+      upvoted the comment, removes username from downvotedBy if that user had previously 
+      downvoted the comment, returns 200 response with comment on comment property of 
+      response body
+    - If no ID is supplied, comment with supplied ID doesn’t exist, or user with supplied 
+      username doesn’t exist, returns 400 response
+  */
+const upvoteComment = (url, request) => {
+  const id = Number(url.split('/').filter(segment => segment)[1]);
+  const username = request.body && request.body.username;
+  let savedComment = database.comments[id];
+  const response = {};
+
+  if (savedComment && database.users[username]) {
+    savedComment = upvote(savedComment, username);
+
+    response.body = {comment: savedComment};
+    response.status = 200;
+  } else {
+    response.status = 400;
+  }
+
+  return response;
+};
 
 // Route Paths and Functionality
 const routes = {
@@ -151,6 +178,11 @@ const routes = {
   '/comments/:id': {
     'PUT': updateComment,
     'DELETE': deleteComment
+  },
+
+  // -----   /comments/:id/upvote
+  '/comments/:id/upvote': {
+    'PUT': upvoteComment
   },
 };
 
