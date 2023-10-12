@@ -88,6 +88,35 @@ const updateComment = (url, request) => {
   return response;
 };
 
+/*
+  - DELETE
+    - Receives comment ID from URL parameter
+    - Deletes comment from database and removes all references to its ID from 
+      corresponding user and article models, returns 204 response
+    - If no ID is supplied or comment with supplied ID doesn’t exist, returns 404 response
+  */
+    const deleteComment = (url, request) => {
+      const id = Number(url.split('/').filter(segment => segment)[1]);
+      const savedComment = database.comments[id];
+      const response = {};
+    
+      if (savedComment) {
+        database.comments[id] = null;
+    
+        const userIndex = database.users[savedComment.username].commentIds.indexOf(id);
+        database.users[savedComment.username].commentIds.splice(userIndex,1);
+    
+        const articleIndex = database.articles[savedComment.articleId].commentIds.indexOf(id);
+        database.articles[savedComment.articleId].commentIds.splice(articleIndex,1);
+        
+        response.status = 204;
+      } else {
+        response.status = 404;
+      }
+    
+      return response;
+    };
+    
 
 // Route Paths and Functionality
 const routes = {
@@ -120,7 +149,8 @@ const routes = {
 
   //-----   /comments/:id
   '/comments/:id': {
-    'PUT': updateComment
+    'PUT': updateComment,
+    'DELETE': deleteComment
   },
 };
 
