@@ -1,10 +1,180 @@
+const fs = require("fs");
+const YAML = require('yaml');
+/*
+------------Database Properties
+- comments - an object with keys of IDs and values of the corresponding comments
+  - id - Number, unique to each comment
+  - body - String
+  - username - String, the username of the author
+  - articleId - Number, the ID of the article the comment belongs to
+  - upvotedBy - Array of usernames, corresponding to users who upvoted the comment
+  - downvotedBy - Array of usernames, corresponding to users who downvoted the comment
+- nextCommentId - a number representing the ID of the next comment to create (to ensure all comments 
+  have unique IDs), initializes to 1
+*/
 // database is let instead of const to allow us to modify it in test.js
 let database = {
   users: {},
   articles: {},
-  nextArticleId: 1
+  nextArticleId: 1,
+  comments: {},
+  nextCommentId: 1
 };
 
+// Funzioni per routes
+/*----- /comments
+  -POST
+    - Receives comment information from comment property of request body
+    - Creates new comment and adds it to database, returns a 201 response with comment on 
+      comment property of response body
+    - If body isn’t supplied, user with supplied username doesn’t exist, or article with 
+      supplied article ID doesn’t exist, returns a 400 response
+*/
+const createComment = (url, request) => {
+  const requestComment = request.body && request.body.comment;
+  const response = {};
+
+  if (
+    requestComment && requestComment.body && 
+    requestComment.articleId && database.articles[requestComment.articleId] && 
+    requestComment.username && database.users[requestComment.username]
+  ) {
+    const comment = {
+      id: database.nextCommentId++,
+      body: requestComment.body,
+      username: requestComment.username,
+      articleId: requestComment.articleId,
+      upvotedBy: [],
+      downvotedBy: []
+    };
+
+    database.comments[comment.id] = comment;
+    database.articles[comment.articleId].commentIds.push(comment.id);
+    database.users[comment.username].commentIds.push(comment.id);
+
+    response.body = {comment: comment};
+    response.status = 201;
+  } else {
+    response.status = 400;
+  }
+
+  return response;
+};
+
+/*-------   /comments/:id
+  - PUT
+    - Receives comment ID from URL parameter and updated comment from comment property 
+      of request body
+    - Updates body of corresponding comment in database, returns a 200 response with 
+      the updated comment on comment property of the response body
+    - If comment with given ID does not exist, returns 404 response
+    - If no ID or updated comment is supplied, returns 400 response
+*/
+const updateComment = (url, request) => {
+  const id = Number(url.split('/').filter(segment => segment)[1]);
+  const savedComment = database.comments[id];
+  const requestComment = request.body && request.body.comment;
+  const response = {};
+
+  if (!id || !requestComment) {
+    response.status = 400;
+  } else if (!savedComment) {
+    response.status = 404;
+  } else {
+    savedComment.body = requestComment.body || savedComment.body;
+    
+    response.body = {comment: savedComment};
+    response.status = 200;
+  }
+
+  return response;
+};
+
+/*
+  - DELETE
+    - Receives comment ID from URL parameter
+    - Deletes comment from database and removes all references to its ID from 
+      corresponding user and article models, returns 204 response
+    - If no ID is supplied or comment with supplied ID doesn’t exist, returns 404 response
+  */
+const deleteComment = (url, request) => {
+  const id = Number(url.split('/').filter(segment => segment)[1]);
+  const savedComment = database.comments[id];
+  const response = {};
+
+  if (savedComment) {
+    database.comments[id] = null;
+
+    const userIndex = database.users[savedComment.username].commentIds.indexOf(id);
+    database.users[savedComment.username].commentIds.splice(userIndex,1);
+
+    const articleIndex = database.articles[savedComment.articleId].commentIds.indexOf(id);
+    database.articles[savedComment.articleId].commentIds.splice(articleIndex,1);
+    
+    response.status = 204;
+  } else {
+    response.status = 404;
+  }
+
+  return response;
+};
+
+/* -------        /comments/:id/upvote
+  - PUT
+    - Receives comment ID from URL parameter and username from username property of request body
+    - Adds supplied username to upvotedBy of corresponding comment if user hasn’t already 
+      upvoted the comment, removes username from downvotedBy if that user had previously 
+      downvoted the comment, returns 200 response with comment on comment property of 
+      response body
+    - If no ID is supplied, comment with supplied ID doesn’t exist, or user with supplied 
+      username doesn’t exist, returns 400 response
+  */
+const upvoteComment = (url, request) => {
+  const id = Number(url.split('/').filter(segment => segment)[1]);
+  const username = request.body && request.body.username;
+  let savedComment = database.comments[id];
+  const response = {};
+
+  if (savedComment && database.users[username]) {
+    savedComment = upvote(savedComment, username);
+
+    response.body = {comment: savedComment};
+    response.status = 200;
+  } else {
+    response.status = 400;
+  }
+
+  return response;
+};
+
+/*---------       /comments/:id/downvote
+  - PUT
+    - Receives comment ID from URL parameter and username from username property of request body
+    - Adds supplied username to downvotedBy of corresponding comment if user hasn’t already 
+      downvoted the comment, remove username from upvotedBy if that user had previously 
+      upvoted the comment, returns 200 response with comment on comment property of response body
+    - If no ID is supplied, comment with supplied ID doesn’t exist, or user with supplied 
+      username doesn’t exist, returns 400 response  
+  */
+const downvoteComment = (url, request) => {
+  const id = Number(url.split('/').filter(segment => segment)[1]);
+  const username = request.body && request.body.username;
+  let savedComment = database.comments[id];
+  const response = {};
+
+  if (savedComment && database.users[username]) {
+    savedComment = downvote(savedComment, username);
+
+    response.body = {comment: savedComment};
+    response.status = 200;
+  } else {
+    response.status = 400;
+  }
+
+  return response;
+};
+
+// Route Paths and Functionality
 const routes = {
   '/users': {
     'POST': getOrCreateUser
@@ -26,6 +196,27 @@ const routes = {
   },
   '/articles/:id/downvote': {
     'PUT': downvoteArticle
+  },
+
+  //-----   /comments
+  '/comments': {
+    'POST': createComment
+  },
+
+  //-----   /comments/:id
+  '/comments/:id': {
+    'PUT': updateComment,
+    'DELETE': deleteComment
+  },
+
+  // -----   /comments/:id/upvote
+  '/comments/:id/upvote': {
+    'PUT': upvoteComment
+  },
+
+  //-----   /comments/:id/downvote
+  '/comments/:id/downvote': {
+    'PUT': downvoteComment
   }
 };
 
@@ -239,6 +430,34 @@ function downvote(item, username) {
   }
   return item;
 }
+
+/*----------    Bonus: salvataggio e caricamento YAML
+Attualmente ogni volta che avvii e arresti il ​​tuo server, il tuo oggetto database verrà 
+cancellato poiché non viene salvato da nessuna parte. Esistono molti potenziali formati 
+per il salvataggio dell'oggetto database per garantire che possa essere ripristinato. 
+Per questo progetto, come bonus, ti invitiamo a utilizzare YAML. Scriverai due funzioni, 
+una che salva l'oggetto del database in YAML dopo ogni chiamata al server e un'altra che 
+carica l'oggetto del database all'avvio del server. Abbiamo implementato la logica per 
+chiamare queste funzioni, è tuo compito trovare moduli JavaScript appropriati per questa 
+funzionalità e scrivere le seguenti funzioni:
+  - loadDatabase
+      Legge un file YAML contenente il database e restituisce un oggetto JavaScript che 
+      rappresenta il database
+  - saveDatabase
+      Scrive il valore corrente di databasein un file YAML
+*/
+const loadDatabase = () => {
+  let load = YAML.parse(fs.readFileSync('./database.yml', 'utf8'));
+  //console.log(load);
+  return load;
+};
+
+const saveDatabase = () => {
+  let db = YAML.stringify(database, {mapAsMap: true});
+
+  fs.writeFileSync('./database.yml', db);
+};
+
 
 // Write all code above this line.
 
