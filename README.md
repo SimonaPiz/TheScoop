@@ -11,7 +11,7 @@
 * [Technologies Used](#technologies-used)
 * [Setup](#setup)
 * [Acknowledgements](#acknowledgements)
-* [Contact](#contact)
+* [Author](#author)
 <!-- * [License](#license) -->
 
 
@@ -53,6 +53,13 @@ A testing suite has been provided.
   
   ![test results](https://user-images.githubusercontent.com/91121660/274607082-1d3a9940-6dca-4c51-a3a5-358651c1e8d7.png)
 
+## Technologies Used
+   - React 15
+   - React router dom 4
+   - chai 4
+   - mocha 6
+   - yaml 2
+
 ## Setup
 To start the server, run 
 ```
@@ -65,3 +72,11 @@ and then
 from the root directory of this project.
 
 To view your local version of the site, open **index.html** in a web browser.
+
+## Acknowledgements
+
+This project comes from the [Codecademy's Create a Back-End with JavaScript](https://www.codecademy.com/learn/paths/create-a-back-end-app-with-javascript) course.
+
+## Author
+
+- [Simona Pizio](https://github.com/SimonaPiz)
