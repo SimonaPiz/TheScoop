@@ -3,9 +3,21 @@
 
 <img src="https://github.com/SimonaPiz/TheScoop/blob/main/anteprima03.png" width="800px" alt="preview" title="preview"/>
 
-## Project Overview
+## Table of Contents
+* [General Info](#general-information)
+    * [Features](#features)
+    * [Implementation Details](#implementation-details)
+    * [Test](#test)
+* [Technologies Used](#technologies-used)
+* [Setup](#setup)
+* [Acknowledgements](#acknowledgements)
+* [Contact](#contact)
+<!-- * [License](#license) -->
 
-In this project, you will build all of the routing and database logic for an article submission web app called The Scoop.
+
+## General Information
+
+### Features
 
 The Scoop allows users to:
 - Create and log in to custom username handles
@@ -15,37 +27,31 @@ The Scoop allows users to:
 - Upvote and downvote comments
 - View all of a user's articles and comments
 
-You can view all of this functionality in action in the video below:+
+You can view all of this functionality in action in the video below: [▶](https://content.codecademy.com/programs/build-apis/solution-videos/TheScoopFinal480.mov)
 
 
-## Implementation Details
+### Implementation Details
 
 To complete this project, I needed to add for Comments:
-  - [ ] the database information 
-  - [ ] and server routes
+  - [x] the database information
+    - ✔ [issue 3](https://github.com/SimonaPiz/TheScoop/issues/3)
+  - [x] and server routes
+    - ✔ [issue 4](https://github.com/SimonaPiz/TheScoop/issues/4)
 
-- Bonus: YAML Saving and Loading
+Bonus: YAML Saving and Loading
 
-  - [ ] I used YAML for saving the database object to ensure it is able to be restored. Functions:
+  - [x] I used YAML for saving the database object to ensure it is able to be restored. Functions:
     - **loadDatabase**
     - **saveDatabase**
+    - ✔ [issue 6](https://github.com/SimonaPiz/TheScoop/issues/6)
 
 
-## Testing
+### Test
 
-A testing suite has been provided for you, checking for all essential functionality and
-edge cases.
-
-To run these tests, first, open the root project directory in your terminal. Then run `npm install` to install
-all necessary testing dependencies (if you haven't already).
-Finally, run `npm test`. You will see a list of tests that ran with information
-about whether or not each test passed. After this list, you will see more specific output
-about why each failing test failed.
-
-As you implement functionality, run the tests to
-ensure you are creating correctly named variables and functions that return the proper values.
-The tests will additionally help you identify edge cases that you may not have anticipated
-when first writing the functions.
+A testing suite has been provided.
+- ✔ All test passed
+  
+  ![test results](https://user-images.githubusercontent.com/91121660/274607082-1d3a9940-6dca-4c51-a3a5-358651c1e8d7.png)
 
 ## Setup
 To start the server, run 
