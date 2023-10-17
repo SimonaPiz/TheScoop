@@ -1,4 +1,7 @@
-# The Scoop
+# <img src="https://github.com/SimonaPiz/TheScoop/blob/main/favicon.png" width="25px" alt="icon The Scoop" title="icon The Scoop"/>  The Scoop
+> An article submission web app - I created all of the routing and database logic
+
+<img src="https://github.com/SimonaPiz/TheScoop/blob/main/anteprima03.png" width="800px" alt="preview" title="preview"/>
 
 ## Project Overview
 
